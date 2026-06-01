@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quorum — Structured AI Deliberation for Decisions That Matter</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08090B;
+    --bg-surface: #0E1014;
+    --bg-elevated: #14161C;
+    --border: #1E2128;
+    --border-hover: #2A2E38;
+    --text-primary: #E4E6EB;
+    --text-secondary: #7D828E;
+    --text-dim: #484C56;
+    --gold: #FBBF24;
+    --gold-dim: rgba(251, 191, 36, 0.08);
+    --gold-glow: rgba(251, 191, 36, 0.15);
+    --green: #4ADE80;
+    --green-dim: rgba(74, 222, 128, 0.08);
+    --red: #F87171;
+    --red-dim: rgba(248, 113, 113, 0.08);
+    --blue: #60A5FA;
+    --blue-dim: rgba(96, 165, 250, 0.08);
+    --amber: #FBBF24;
+    --slate: #94A3B8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 60px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px; background: rgba(8,9,11,0.8); backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo { width: 26px; height: 26px; border-radius: 5px; background: #4ADE80; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .nav-logo::after { content:''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 40%, rgba(0,0,0,0.2)); }
+  .nav-logo span { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; color: #08090B; position: relative; z-index: 1; }
+  .nav-name { font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.5px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a { font-size: 13px; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-back { color: var(--text-dim) !important; }
+
+  .section { padding: 100px 48px; max-width: 1000px; margin: 0 auto; }
+  .section-border { border-top: 1px solid var(--border); }
+
+  /* HERO */
+  .hero {
+    padding: 180px 48px 100px; max-width: 1000px; margin: 0 auto; position: relative;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: 80px; right: -100px;
+    width: 500px; height: 500px; background: radial-gradient(circle, var(--gold-dim) 0%, transparent 60%); pointer-events: none;
+  }
+  .hero-icon {
+    width: 52px; height: 52px; border-radius: 12px; background: var(--gold-dim); border: 1px solid rgba(251,191,36,0.15);
+    display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 28px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .hero h1 {
+    font-family: 'Instrument Serif', serif; font-size: clamp(40px, 5vw, 60px); font-weight: 400;
+    line-height: 1.15; max-width: 700px; margin-bottom: 24px;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero-sub {
+    font-size: 18px; color: var(--text-secondary); font-weight: 300; max-width: 600px;
+    line-height: 1.8; animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  /* PROBLEM */
+  .problem-quote {
+    font-family: 'Instrument Serif', serif; font-size: 26px; font-style: italic;
+    line-height: 1.5; color: var(--text-primary); padding-left: 24px;
+    border-left: 2px solid var(--gold); max-width: 640px; margin-bottom: 32px;
+  }
+  .problem-text { font-size: 16px; color: var(--text-secondary); line-height: 1.8; font-weight: 300; max-width: 640px; margin-bottom: 16px; }
+
+  /* MECHANISM */
+  .rounds { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
+  .round {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface);
+    overflow: hidden;
+  }
+  .round-header {
+    padding: 20px 28px; background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .round-number {
+    font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+    color: var(--gold); letter-spacing: 1px; min-width: 64px;
+  }
+  .round-name { font-size: 16px; font-weight: 600; }
+  .round-body { padding: 24px 28px; }
+  .round-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.75; font-weight: 300; }
+  .round-agents {
+    margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .round-agent {
+    padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary);
+  }
+
+  /* PATTERNS */
+  .patterns-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 40px; }
+  .pattern-card {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface);
+    padding: 28px; transition: border-color 0.2s;
+  }
+  .pattern-card:hover { border-color: var(--border-hover); }
+  .pattern-name { font-family: 'Instrument Serif', serif; font-size: 22px; margin-bottom: 4px; }
+  .pattern-stakes { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px; margin-bottom: 10px; }
+  .pattern-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; font-weight: 300; }
+
+  /* DOMAINS */
+  .domains-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+  .domain-card {
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface);
+    padding: 24px; transition: border-color 0.2s;
+  }
+  .domain-card:hover { border-color: var(--border-hover); }
+  .domain-icon { font-size: 20px; margin-bottom: 12px; }
+  .domain-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .domain-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; font-weight: 300; margin-bottom: 10px; }
+  .domain-trust { font-size: 12px; color: var(--text-dim); font-style: italic; line-height: 1.5; padding-top: 10px; border-top: 1px solid var(--border); }
+
+  /* OUTPUT */
+  .output-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 32px; }
+  .output-item {
+    padding: 20px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-surface);
+  }
+  .output-label { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; }
+  .output-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; font-weight: 300; }
+
+  /* ENGAGE */
+  .engage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+  .engage-card {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface);
+    padding: 36px;
+  }
+  .engage-name { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 8px; }
+  .engage-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; font-weight: 300; margin-bottom: 20px; }
+  .engage-features { display: flex; flex-direction: column; gap: 6px; }
+  .engage-feature { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+  .engage-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+  /* CTA */
+  .cta-section { text-align: center; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 32px; background: var(--gold); color: var(--bg);
+    font-size: 15px; font-weight: 700; border-radius: 8px;
+    text-decoration: none; transition: all 0.2s; border: none; cursor: pointer;
+  }
+  .cta-btn:hover { box-shadow: 0 0 40px var(--gold-glow); transform: translateY(-1px); }
+
+  footer {
+    padding: 48px; border-top: 1px solid var(--border); max-width: 1000px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-text { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-dim); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text-secondary); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 900px) {
+    nav { padding: 0 24px; } .nav-links { display: none; }
+    .hero { padding: 140px 24px 80px; }
+    .section { padding: 60px 24px; }
+    .patterns-grid, .engage-grid, .output-grid { grid-template-columns: 1fr; }
+    .domains-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://bryansparks.github.io" class="nav-brand">
+    <div class="nav-logo"><span>E</span></div>
+    <span class="nav-name">bryansparks</span>
+  </a>
+  <div class="nav-links">
+    <a href="https://bryansparks.github.io" class="nav-back">← Projects</a>
+    <a href="#mechanism">How It Works</a>
+    <a href="#patterns">Patterns</a>
+    <a href="#domains">Domains</a>
+    <a href="#engage">Engage</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-icon">⬡</div>
+  <h1>Decisions that matter deserve more than a <em>single model's guess.</em></h1>
+  <p class="hero-sub">
+    Quorum is a structured multi-agent deliberation engine. Instead of one AI producing an answer, a team of AI agents with distinct expert perspectives argue, challenge, and synthesize through formal debate protocols — producing not just a recommendation, but a complete, auditable reasoning record.
+  </p>
+</div>
+
+<!-- THE TRUST GAP -->
+<div class="section section-border">
+  <div class="problem-quote">
+    "You don't have to trust AI to give you the right answer. You have to be able to trust the process that produced the answer."
+  </div>
+  <div class="problem-text">
+    AI is being embedded in consequential decisions at an accelerating pace: clinical care pathways, enterprise architecture, legal risk assessment, product strategy, compliance review. And yet, adoption stalls at a predictable inflection point — the moment when the humans responsible for a decision are asked to accept an AI's recommendation on something that really matters.
+  </div>
+  <div class="problem-text">
+    The reason is not distrust of AI in general. It is distrust of the black box. A single model ingests a prompt and returns a conclusion. There is no record of what it considered, what it rejected, what objections it encountered. The output exists without a history.
+  </div>
+  <div class="problem-text">
+    For consequential decisions, that absence is disqualifying. Quorum exists to close this gap — by making the process visible, the reasoning auditable, and the dissent documented.
+  </div>
+</div>
+
+<!-- MECHANISM -->
+<div class="section section-border" id="mechanism">
+  <div style="font-family:'Geist Mono',monospace; font-size:11px; font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">The Mechanism</div>
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.25; margin-bottom:12px; max-width:560px;">Three rounds. Multiple perspectives. One auditable record.</div>
+  <div class="problem-text">
+    Every Quorum deliberation follows an invariant structure. The agent roster is configurable — 3 for a quick analysis, 9 for a high-stakes decision with regulatory implications — but the process is always the same.
+  </div>
+
+  <div class="rounds">
+    <div class="round">
+      <div class="round-header">
+        <div class="round-number">ROUND 1</div>
+        <div class="round-name">Specialist Analysis</div>
+      </div>
+      <div class="round-body">
+        <div class="round-desc">Each agent analyzes the problem from its domain perspective: technical feasibility, legal risk, user impact, security implications, business value, cost, timeline. Agents do not simply agree — they each bring the concerns and constraints native to their discipline. Every position is recorded.</div>
+        <div class="round-agents">
+          <span class="round-agent">Engineering Liaison</span>
+          <span class="round-agent">System Architect</span>
+          <span class="round-agent">Security Officer</span>
+          <span class="round-agent">Legal Specialist</span>
+          <span class="round-agent">UX Designer</span>
+          <span class="round-agent">Stakeholder Advocate</span>
+        </div>
+      </div>
+    </div>
+    <div class="round">
+      <div class="round-header">
+        <div class="round-number">ROUND 2</div>
+        <div class="round-name">Skeptic Challenge</div>
+      </div>
+      <div class="round-body">
+        <div class="round-desc">A designated Skeptic agent reviews all specialist input and systematically challenges the reasoning. It questions assumptions, demands evidence, identifies compounding risks, probes for overconfidence, and ensures the team has not rushed toward consensus. The Skeptic's challenges become part of the permanent record — every objection raised, whether sustained or overcome.</div>
+        <div class="round-agents">
+          <span class="round-agent" style="border-color:var(--gold); color:var(--gold);">Skeptic Agent</span>
+        </div>
+      </div>
+    </div>
+    <div class="round">
+      <div class="round-header">
+        <div class="round-number">ROUND 3</div>
+        <div class="round-name">Synthesis & Recommendation</div>
+      </div>
+      <div class="round-body">
+        <div class="round-desc">A synthesis agent resolves or acknowledges unresolved tensions, assigns a calibrated confidence score (0.0–1.0), flags whether the decision should proceed automatically or escalate for human review, and produces the final recommendation — along with a structured record of what was decided, what was contested, what was explicitly not chosen, and why.</div>
+        <div class="round-agents">
+          <span class="round-agent" style="border-color:var(--blue); color:var(--blue);">Synthesis Agent</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OUTPUT -->
+<div class="section section-border">
+  <div style="font-family:'Geist Mono',monospace; font-size:11px; font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">The Output</div>
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.25; margin-bottom:12px; max-width:480px;">A decision artifact, not just a recommendation.</div>
+  <div class="problem-text">Every Quorum deliberation produces a complete, permanent record.</div>
+
+  <div class="output-grid">
+    <div class="output-item">
+      <div class="output-label">Decision Summary</div>
+      <div class="output-desc">What was decided, at what confidence level, and whether it proceeds autonomously or requires human review.</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">Full Debate Transcript</div>
+      <div class="output-desc">Verbatim, attributed exchange. Every perspective recorded. Every challenge documented. Permanently preserved.</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">Alternatives Record</div>
+      <div class="output-desc">Every path considered and rejected, with explicit reasoning for why it was not taken. The roads not traveled matter.</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">Confidence Score</div>
+      <div class="output-desc">0.0–1.0 calibrated to the quality of reasoning, not the certainty of the model. A 0.65 with three open concerns is more honest than a 0.95 from a black box.</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">Escalation Signal</div>
+      <div class="output-desc">When confidence falls below threshold, Quorum creates a human-in-the-loop request with exactly the context needed to exercise judgment.</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">Structured Documents</div>
+      <div class="output-desc">Architecture docs, decision summaries, work plans, risk registers — generated from deliberation content, not boilerplate.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PATTERNS -->
+<div class="section section-border" id="patterns">
+  <div style="font-family:'Geist Mono',monospace; font-size:11px; font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Debate Patterns</div>
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.25; margin-bottom:12px; max-width:560px;">Different stakes call for different processes.</div>
+  <div class="problem-text">Quorum supports multiple deliberation structures. The pattern is selected based on the stakes, time available, and nature of the problem.</div>
+
+  <div class="patterns-grid">
+    <div class="pattern-card">
+      <div class="pattern-name">Standard</div>
+      <div class="pattern-stakes">3 rounds · 5–9 agents · Most decisions</div>
+      <div class="pattern-desc">The core three-round structure: specialist analysis, skeptic challenge, synthesis. Suitable for feature decisions, architecture reviews, risk assessments, and most consequential choices.</div>
+    </div>
+    <div class="pattern-card">
+      <div class="pattern-name">Deep Deliberation</div>
+      <div class="pattern-stakes">5 rounds · 7–12 agents · High stakes</div>
+      <div class="pattern-desc">Extended structure with rebuttal and reassessment rounds. Agents revisit and revise positions after hearing challenges. Used when initial confidence is low or when the decision has irreversible consequences.</div>
+    </div>
+    <div class="pattern-card">
+      <div class="pattern-name">Red Team</div>
+      <div class="pattern-stakes">Adversarial · 2 teams · Security & architecture</div>
+      <div class="pattern-desc">One team argues for a proposal. Another is tasked with defeating it. Surfaces hidden weaknesses, attack vectors, and failure modes before commitment. Essential for security-sensitive and infrastructure decisions.</div>
+    </div>
+    <div class="pattern-card">
+      <div class="pattern-name">Six Thinking Hats</div>
+      <div class="pattern-stakes">Parallel perspectives · 6 modes · Strategy</div>
+      <div class="pattern-desc">De Bono's methodology: each agent adopts a specific thinking mode — facts, emotion, caution, optimism, creativity, process — rather than its domain role. Particularly effective for strategy, innovation, and product direction questions.</div>
+    </div>
+    <div class="pattern-card">
+      <div class="pattern-name">Speed Panel</div>
+      <div class="pattern-stakes">Compressed · 3 agents · Lower stakes</div>
+      <div class="pattern-desc">Rapid deliberation for time-sensitive or lower-stakes decisions. Fewer rounds, smaller roster, faster turnaround. Still produces a transcript and confidence score — just leaner.</div>
+    </div>
+    <div class="pattern-card">
+      <div class="pattern-name">Multi-Stage Chain</div>
+      <div class="pattern-stakes">Sequential stages · Context inheritance</div>
+      <div class="pattern-desc">Complex projects move through stages where each stage's output becomes input to the next. The agent roster differs per stage, but accumulated reasoning carries forward. The architecture team knows why requirements were scoped as they were.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DOMAINS -->
+<div class="section section-border" id="domains">
+  <div style="font-family:'Geist Mono',monospace; font-size:11px; font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Where It Applies</div>
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.25; margin-bottom:12px; max-width:560px;">Any domain where the reasoning matters as much as the result.</div>
+  <div class="problem-text">Quorum is domain-agnostic by design. The agent roster is configured per workflow. These are the domains where the trust gap is most acute.</div>
+
+  <div class="domains-grid">
+    <div class="domain-card">
+      <div class="domain-icon">🏥</div>
+      <div class="domain-name">Clinical Decisions</div>
+      <div class="domain-desc">Care pathways, treatment protocols, diagnostic reasoning. Where the decision affects patient outcomes and the rationale must be defensible.</div>
+      <div class="domain-trust">Trust need: Clinicians cannot justify a decision by citing "the AI said so." They can justify a structured analysis where competing considerations were weighed.</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">⚖️</div>
+      <div class="domain-name">Legal Risk Assessment</div>
+      <div class="domain-desc">Contract analysis, regulatory interpretation, litigation risk, compliance review. Where the reasoning is the deliverable, not just the conclusion.</div>
+      <div class="domain-trust">Trust need: Legal counsel needs to see that risk was debated, mitigated, and documented — not summarized by a single model pass.</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🏗️</div>
+      <div class="domain-name">Architecture & Engineering</div>
+      <div class="domain-desc">System design, technology selection, infrastructure planning. Where trade-offs are genuine and the wrong call compounds for years.</div>
+      <div class="domain-trust">Trust need: Engineering teams trust architectures more when they see that security, scalability, and maintenance concerns were represented in the deliberation.</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">📊</div>
+      <div class="domain-name">Financial & Investment</div>
+      <div class="domain-desc">Capital allocation, risk assessment, portfolio strategy. Where quantitative analysis meets qualitative judgment under uncertainty.</div>
+      <div class="domain-trust">Trust need: Investment committees must document their process. A debate transcript with confidence scores is a compliance artifact.</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🛡️</div>
+      <div class="domain-name">Compliance & Ethics</div>
+      <div class="domain-desc">GDPR, HIPAA, CCPA determinations. Data use ethics. Where the question is not just "can we?" but "should we?" and the answer must be defensible.</div>
+      <div class="domain-trust">Trust need: Compliance decisions need to survive regulatory audit. The record of how the decision was reached matters as much as the decision itself.</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🚀</div>
+      <div class="domain-name">Product Strategy</div>
+      <div class="domain-desc">Prioritization, market entry, feature strategy. Where trade-offs are real — engineering effort, market timing, user value, competitive position.</div>
+      <div class="domain-trust">Trust need: Product decisions require buy-in from multiple functions. A strategy debated by engineering, UX, and market perspectives earns that buy-in faster.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO ENGAGE -->
+<div class="section section-border" id="engage">
+  <div style="font-family:'Geist Mono',monospace; font-size:11px; font-weight:500; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">How to Engage</div>
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.25; margin-bottom:12px; max-width:560px;">Two ways to use Quorum.</div>
+  <div class="problem-text">Quorum powers every ElfTech product internally. It's also available as a standalone capability for organizations building their own decision infrastructure.</div>
+
+  <div class="engage-grid">
+    <div class="engage-card">
+      <div class="engage-name">Built Into ElfTech Products</div>
+      <div class="engage-desc">If you use Steward, Relay, Discover, or any ElfTech product, Quorum is already working. The deliberation panel in Steward's approval queue, the compliance routing in Relay, the evidence synthesis in Discover — all powered by Quorum deliberations.</div>
+      <div class="engage-features">
+        <div class="engage-feature"><span class="engage-dot"></span>Integrated into every ElfTech product's decision pipeline</div>
+        <div class="engage-feature"><span class="engage-dot"></span>Deliberation records visible in product UIs</div>
+        <div class="engage-feature"><span class="engage-dot"></span>Debate pattern selected automatically based on stakes</div>
+        <div class="engage-feature"><span class="engage-dot"></span>No separate configuration needed</div>
+      </div>
+    </div>
+    <div class="engage-card">
+      <div class="engage-name">Standalone & Consulting</div>
+      <div class="engage-desc">For organizations that need structured AI deliberation in their own workflows — architecture review boards, investment committees, compliance teams, clinical decision support — Quorum is available as a service with implementation consulting.</div>
+      <div class="engage-features">
+        <div class="engage-feature"><span class="engage-dot"></span>Custom agent rosters configured for your domain</div>
+        <div class="engage-feature"><span class="engage-dot"></span>API integration with your existing decision workflows</div>
+        <div class="engage-feature"><span class="engage-dot"></span>Debate pattern selection and tuning</div>
+        <div class="engage-feature"><span class="engage-dot"></span>Implementation consulting for high-stakes domains</div>
+        <div class="engage-feature"><span class="engage-dot"></span>Ongoing optimization based on decision outcomes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section section-border cta-section">
+  <div style="font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; line-height:1.3; margin-bottom:16px;">
+    The debate is the deliverable.
+  </div>
+  <div class="problem-text" style="margin:0 auto 32px; text-align:center;">
+    If your organization makes decisions where the reasoning matters as much as the result, let's talk about how Quorum can make that reasoning visible, auditable, and trustworthy.
+  </div>
+  <a href="mailto:hello@elftech.com" class="cta-btn">
+    Start a conversation
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</div>
+
+<footer>
+  <span class="footer-text">ElfTech, Inc. · Quorum · © 2026</span>
+  <div class="footer-links">
+    <a href="https://bryansparks.github.io">bryansparks.github.io</a>
+    <a href="https://bryansparks.github.io/armature">Armature</a>
+    <a href="https://bryansparks.github.io/argus">Argus</a>
+    <a href="mailto:hello@elftech.com">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>
